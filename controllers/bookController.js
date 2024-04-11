@@ -1,14 +1,45 @@
 const Book = require("../models/book");
+const Author = require("../models/author");
+const Genre = require("../models/genre");
+const BookInstance = require("../models/bookinstance");
+
 const asyncHandler = require("express-async-handler");
 
 exports.index = asyncHandler(async (req, res, next) => {
-  res.send("NOT IMPLEMENTED: Site Home Page");
+  // 并行获取书的详细信息、书实例、作者和体裁的数量
+  const [
+    numBooks,
+    numBookInstances,
+    numAvailableBookInstances,
+    numAuthors,
+    numGenres,
+  ] = await Promise.all([
+    Book.countDocuments({}).exec(),
+    BookInstance.countDocuments({}).exec(),
+    BookInstance.countDocuments({ status: "Available" }).exec(),
+    Author.countDocuments({}).exec(),
+    Genre.countDocuments({}).exec(),
+  ]);
+
+  res.render("index", {
+    title: "Local Library Home",
+    book_count: numBooks,
+    book_instance_count: numBookInstances,
+    book_instance_available_count: numAvailableBookInstances,
+    author_count: numAuthors,
+    genre_count: numGenres,
+  });
 });
 
-// Display list of all books.
-exports.book_list = asyncHandler(async (req, res, next) => {
-  res.send("NOT IMPLEMENTED: Book list");
-});
+// Display list of all Books.
+exports.book_list = async function (req, res, next) {
+  try {
+    const list_books = await Book.find({}, "title author").populate("author").exec();
+    res.render("book_list", { title: "Book List", book_list: list_books });
+  } catch (err) {
+    return next(err);
+  }
+};
 
 // Display detail page for a specific book.
 exports.book_detail = asyncHandler(async (req, res, next) => {
