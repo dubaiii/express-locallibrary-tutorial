@@ -9,6 +9,14 @@ var usersRouter = require('./routes/users');
 
 var app = express();
 
+// 设置 Mongoose 连接
+const mongoose = require("mongoose");
+const mongoDB = "mongodb+srv://morxva:dAL832cNQO59C51L@locallibrary.trj0uq5.mongodb.net/?retryWrites=true&w=majority&appName=Locallibrary";
+mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.Promise = global.Promise;
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "MongoDB 连接错误："));
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
