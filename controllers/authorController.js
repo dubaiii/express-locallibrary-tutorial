@@ -1,3 +1,5 @@
+var Book = require("../models/book");
+
 const Author = require("../models/author");
 const asyncHandler = require("express-async-handler");
 
@@ -16,9 +18,26 @@ exports.author_list = async function (req, res, next) {
 };
 
 // Display detail page for a specific Author.
-exports.author_detail = asyncHandler(async (req, res, next) => {
-  res.send(`NOT IMPLEMENTED: Author detail: ${req.params.id}`);
-});
+exports.author_detail = async function (req, res, next) {
+  try {
+    const author = Author.findById(req.params.id);
+    const authors_books = Book.find({ author: req.params.id }, "title summary");
+
+    // 使用 Promise.all 等待所有操作完成
+    const results = await Promise.all([author, authors_books]);
+
+    if (results[0] == null) { // No results.
+      var err = new Error('Author not found');
+      err.status = 404;
+      return next(err);
+    }
+
+    // Successful, so render
+    res.render('author_detail', { title: 'Author Detail', author: results[0], author_books: results[1] });
+  } catch (err) {
+    return next(err);
+  }
+};
 
 // Display Author create form on GET.
 exports.author_create_get = asyncHandler(async (req, res, next) => {
